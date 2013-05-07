@@ -1,0 +1,5 @@
+[Desktop Entry]
+Type=Application
+Name=mpd_notification
+Exec=~/.config/openbox/mpd_notification
+NoDisplay=true
