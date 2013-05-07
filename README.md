@@ -13,7 +13,7 @@ Installation
 
 Install dependencies (on Debian)
 ```
-aptitude install libnotify-dev libmpdclient-dev
+sudo aptitude install libnotify-dev libmpdclient-dev
 ```
 
 Then install the program in your $HOME (see Makefile)
