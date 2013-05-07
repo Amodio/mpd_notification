@@ -24,4 +24,4 @@ install: $(TARGET)
 	cp -f $(TARGET).desktop ~/.config/autostart/
 
 uninstall:
-	rm -f ~/.config/openbox/$(TARGET) ~/.config/openbox/$(TARGET).desktop
+	rm -f ~/.config/openbox/$(TARGET) ~/.config/autostart/$(TARGET).desktop
