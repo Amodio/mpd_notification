@@ -100,7 +100,7 @@ infinite_loop(struct mpd_connection *conn)
     else
       notification = strdup("tagadatugrut");
 
-    if (time(NULL) - start_time >= SLEEP_TIME)
+    if (netlink != NULL && time(NULL) - start_time >= SLEEP_TIME)
     {
       notify_notification_close(netlink, NULL);
       netlink = NULL;
