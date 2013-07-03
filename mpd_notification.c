@@ -1,4 +1,5 @@
 #include <stdio.h>
+#include <assert.h>
 #include <stdlib.h>
 #include <string.h>
 #include <libnotify/notify.h>
@@ -120,15 +121,83 @@ infinite_loop(struct mpd_connection *conn)
   }
 }
 
+/**
+ * XXX http://ampc.googlecode.com/svn-history/r4/trunk/jni/libmpdclient/src/settings.c
+ * Parses the password from the host specification in the form
+ * "password@hostname".
+ *
+ * @param host_p a pointer to the "host" variable, which may be
+ * modified by this function
+ * @return an allocated password string, or NULL if there was no
+ * password
+ */
+static const char *
+mpd_parse_host_password(const char *host, char **password_r)
+{
+  const char *at;
+  char *password;
+
+  assert(password_r != NULL);
+  assert(*password_r == NULL);
+
+  if (host == NULL)
+    return host;
+
+  at = strchr(host, '@');
+  if (at == NULL)
+    return host;
+
+  password = malloc(at - host + 1);
+  if (password != NULL) {
+    /* silently ignoring out-of-memory */
+    memcpy(password, host, at - host);
+    password[at - host] = 0;
+    *password_r = password;
+  }
+
+  return at + 1;
+}
+
+/**
+ * XXX http://ampc.googlecode.com/svn-history/r4/trunk/jni/libmpdclient/src/settings.c
+ * Parses the host specification.  If not specified, it attempts to
+ * load it from the environment variable MPD_HOST.
+ */
+static const char *
+mpd_check_host(const char *host, char **password_r)
+{
+  assert(password_r != NULL);
+  assert(*password_r == NULL);
+
+  if (host == NULL)
+    host = getenv("MPD_HOST");
+
+  if (host != NULL)
+    host = mpd_parse_host_password(host, password_r);
+
+  return host;
+}
+
 int
 main(int argc, char *argv[])
 {
-  struct mpd_connection *conn = mpd_connection_new(NULL, 0, 0);
+  char *password = NULL;
+  struct mpd_connection *conn = mpd_connection_new(mpd_check_host(NULL, &password), 0, 0);
 
   if (mpd_connection_get_error(conn) != MPD_ERROR_SUCCESS)
   {
     fprintf(stderr,"%s: %s\n", argv[0], mpd_connection_get_error_message(conn));
     return 1;
+  }
+
+  if (password != NULL)
+  {
+    if (mpd_run_password(conn, password) == false)
+    {
+      fprintf(stderr, "%s: mpd_run_password %s\n", argv[0], mpd_connection_get_error_message(conn));
+      free(password);
+      return 1;
+    }
   }
 
   if (notify_init("MPD_Notification") == 0)
@@ -140,6 +209,7 @@ main(int argc, char *argv[])
   infinite_loop(conn);
 
   mpd_connection_free(conn);
+  free(password);
   notify_uninit();
 
   return 0;
