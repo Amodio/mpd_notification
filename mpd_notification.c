@@ -48,7 +48,7 @@ format_notification(char *title, char *album, char *artist)
   {
     if (snprintf(str, str_length, NOTIFICATION_FORMAT,
 	  title ? title : unavailable, album ? album : unavailable,
-	  artist ? artist : unavailable) == -1)
+	  artist ? artist : unavailable) >= str_length)
       str[str_length - 1] = '\0';
   }
 
@@ -194,16 +194,17 @@ main(int argc, char *argv[])
   {
     if (mpd_run_password(conn, password) == false)
     {
-      fprintf(stderr, "%s: mpd_run_password %s\n", argv[0], mpd_connection_get_error_message(conn));
+      fprintf(stderr, "%s: mpd_run_password %s\n", argv[0],
+	  mpd_connection_get_error_message(conn));
       free(password);
-      return 1;
+      return 2;
     }
   }
 
   if (notify_init("MPD_Notification") == 0)
   {
     fprintf(stderr, "%s: Cannot initialize libnotify.\n", argv[0]);
-    return 1;
+    return 3;
   }
 
   infinite_loop(conn);
